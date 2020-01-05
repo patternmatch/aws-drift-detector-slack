@@ -12,6 +12,46 @@ This script creates Python virtualenv and installs all requirements inside for l
 
 ```./install.sh```
 
+## Deploy IAM policy
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": [
+                "arn:aws:s3:::pattern-match-driftdetector*",
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetEncryptionConfiguration",
+                "s3:GetBucketTagging",
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketRequestPayment",
+                "ec2:DescribeRegions",
+                "s3:GetBucketVersioning",
+                "s3:GetBucketPolicy",
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor2",
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::pattern-match-driftdetector*",
+            ]
+        }
+    ]
+}
+```
+
 ## Deploy
 
 ```-t tmp directory
