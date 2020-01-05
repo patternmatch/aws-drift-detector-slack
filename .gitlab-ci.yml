@@ -22,7 +22,8 @@ before_script:
   - pip install virtualenv
   - virtualenv venv
   - ./install.sh
+  - source venv/bin/activate
 
 run:
   script:
-    - ./deploy.py -t /tmp -b pattern-match-drift-detector-dev
+    - ./deploy.py -t /tmp -b pattern-match-driftdetector-dev
