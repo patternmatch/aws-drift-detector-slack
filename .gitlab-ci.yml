@@ -25,4 +25,4 @@ before_script:
 
 run:
   script:
-    - deploy.py -t /tmp -b pattern-match-drift-detector-dev
+    - ./deploy.py -t /tmp -b pattern-match-drift-detector-dev
