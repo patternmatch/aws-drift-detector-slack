@@ -133,12 +133,11 @@ def post_to_slack(stacks):
             'type': 'section',
             'text': {
                 'type': 'mrkdwn',
-                'text': ':warning: Drifted *<' \
+                'text': ':warning: *<' \
                         + stack_url + '|' + stack_name \
-                        + '>*.\tDrifted *' \
-                        + percentage \
-                        + '%*\t(' + str(stack['no_of_drifted_resources']) \
-                        + '/' + str(stack['no_of_resources']) + ') resources'
+                        + '>* DRIFTED '
+                        + str(stack['no_of_drifted_resources']) \
+                        + '/' + str(stack['no_of_resources']) + ' resources'
             }
         })
 

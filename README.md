@@ -57,10 +57,10 @@ This script creates Python virtualenv and installs all requirements inside for l
 ```-t tmp directory
 -b prefix for s3 buckets, final name will be [prefix]-region_name
 
-./deploy.py -t /tmp/drift_detector -b pattern-match-drift-detector-dev 
+./deploy.py -t /tmp/drift_detector -b pattern-match-drift-detector-dev
 ```
 
-Note: This script uses Ansible, with async tasks. Waiting for async tasks to 
+Note: This script uses Ansible, with async tasks. Waiting for async tasks to
 be done generates scary outputs like this:
 
 ```FAILED - RETRYING: task name...```

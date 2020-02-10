@@ -18,9 +18,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: DriftDetector
-      CodeUri: s3://pattern-match-drift-detector-dev-dk/37c39c091f4f0725cacaf869c1ad7662
+      CodeUri: s3://pattern-match-drift-detector-dev-eu-west-1/d702cfb6076a56cd529dcc9bd0987804
       Handler: drift-detector.lambda_handler
-      Runtime: python3.6
+      Runtime: python3.7
       Policies:
       - Version: '2012-10-17'
         Statement:
