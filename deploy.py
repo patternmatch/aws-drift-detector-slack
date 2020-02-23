@@ -103,7 +103,4 @@ parser.add_argument("-b", "--base_bucket_name")
 parser.add_argument("-t", "--tmp_path")
 args = parser.parse_args()
 
-# print(args.base_bucket_name)
-# print(args.tmp_path)
-
 deploy(args.base_bucket_name, args.tmp_path)#

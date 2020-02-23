@@ -6,7 +6,6 @@ import sys
 import time
 import os
 
-# @Todo: move to environment
 MAX_ATTEMPTS = 100
 ATTEMPT_WAIT_TIME = 6
 

@@ -1,10 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: 'AWS
-
-  Sample SAM Template for AWS
-
-  '
+Description: 'AWS CloudFormation drift-detector to Slack'
 Parameters:
   SlackWebhook:
     Type: String
