@@ -50,21 +50,21 @@
             --output-template-file {{ tmp_path }}/drift-detector-cf-{{ item.region_name }}.yaml
             --force-upload
             --region {{ item.region_name }}"
-    async: 60
-    poll: 0
-    register: sam_package_status
+    # async: 60
+    # poll: 0
+    # register: sam_package_status
     args:
       chdir: "../"
     loop: "{{ aws_regions.regions }}"
 
-  - name: SAM package (wait)
-    async_status:
-      jid: "{{ item.ansible_job_id }}"
-    register: jobs_sam_package_status
-    retries: 30
-    delay: 1
-    until: jobs_sam_package_status.finished
-    loop: "{{ sam_package_status.results }}"
+  # - name: SAM package (wait)
+  #   async_status:
+  #     jid: "{{ item.ansible_job_id }}"
+  #   register: jobs_sam_package_status
+  #   retries: 30
+  #   delay: 1
+  #   until: jobs_sam_package_status.finished
+  #   loop: "{{ sam_package_status.results }}"
 
   - name: Upload templates to buckets (async)
     aws_s3:
