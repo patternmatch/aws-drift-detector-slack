@@ -2,6 +2,7 @@
 
 - hosts: 127.0.0.1
   connection: local
+  gather_facts: no
 
   tasks:
   - name: Create tmp path
@@ -15,35 +16,36 @@
         opt_in_status: 'opt-in-not-required'
     register: aws_regions
 
-  - name: Create buckets (async)
-    s3_bucket:
-      name: "{{ base_bucket_name }}-{{ item.region_name }}"
-      state: present
-      region: "{{ item.region_name }}"
-      policy: "{{ lookup('template', 'bucket_policy.json') }}"
-    async: 60
-    poll: 0
-    register: create_buckets_status
-    vars:
-      bucket_name: "{{ base_bucket_name }}-{{ item.region_name }}"
-    loop: "{{ aws_regions.regions }}"
+  # - name: Create buckets (async)
+  #   s3_bucket:
+  #     name: "{{ base_bucket_name }}-{{ item.region_name }}"
+  #     state: present
+  #     region: "{{ item.region_name }}"
+  #     policy: "{{ lookup('template', 'bucket_policy.json') }}"
+  #   async: 60
+  #   poll: 0
+  #   register: create_buckets_status
+  #   vars:
+  #     bucket_name: "{{ base_bucket_name }}-{{ item.region_name }}"
+  #   loop: "{{ aws_regions.regions }}"
 
-  - name: Create buckets (wait)
-    async_status:
-      jid: "{{ item.ansible_job_id }}"
-    register: jobs_create_buckets_status
-    retries: 30
-    delay: 1
-    until: jobs_create_buckets_status.finished
-    loop: "{{ create_buckets_status.results }}"
+  # - name: Create buckets (wait)
+  #   async_status:
+  #     jid: "{{ item.ansible_job_id }}"
+  #   register: jobs_create_buckets_status
+  #   retries: 30
+  #   delay: 1
+  #   until: jobs_create_buckets_status.finished
+  #   loop: "{{ create_buckets_status.results }}"
 
   - name: SAM build
-    shell: "sam build"
+    shell: "sam build --build-dir {{ tmp_path }}/build"
     args:
       chdir: "../"
 
   - name: SAM package (async)
     shell: "sam package
+            --template-file {{tmp_path}}/build/template.yaml
             --s3-bucket {{ base_bucket_name }}-{{ item.region_name }}
             --output-template-file {{ tmp_path }}/drift-detector-cf-{{ item.region_name }}.yaml
             --force-upload

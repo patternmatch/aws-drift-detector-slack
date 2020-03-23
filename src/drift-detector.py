@@ -14,7 +14,7 @@ def get_emoji_for_status(status):
     if(status == 'DELETED'):
         return ':x:'
     elif(status == 'MODIFIED'):
-        return ':pencil:'
+        return ':warning:'
     elif(status == 'IN_SYNC'):
         return ':check:'
 
