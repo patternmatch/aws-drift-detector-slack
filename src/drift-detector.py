@@ -16,7 +16,7 @@ def get_emoji_for_status(status):
     elif(status == 'MODIFIED'):
         return ':warning:'
     elif(status == 'IN_SYNC'):
-        return ':check:'
+        return ':heavy_check_mark:'
 
     return ''
 
