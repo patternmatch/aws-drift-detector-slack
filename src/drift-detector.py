@@ -156,6 +156,8 @@ def post_to_slack(stacks):
         'blocks': blocks
     }
 
+    print(json.dumps(message))
+
     return requests.post(url, headers=headers, data=json.dumps(message))
 
 
@@ -166,6 +168,7 @@ def lambda_handler(event, context):
     response = post_to_slack(stacks)
 
     print(response)
+    print(response.content)
 
     return {
         "statusCode": 200,
