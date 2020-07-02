@@ -165,6 +165,8 @@ def lambda_handler(event, context):
     stacks = detect_drift(cfclient, find_stacks(cfclient))
     response = post_to_slack(stacks)
 
+    print(response)
+
     return {
         "statusCode": 200,
         "body": '',
