@@ -17,4 +17,5 @@ before_script:
 
 run:
   script:
+    - make test
     - make deploy-dev

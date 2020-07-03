@@ -12,3 +12,6 @@ deploy-dev:
 
 publish:
 	sam publish --template $(SRC_ROOT)/.tmp/drift_detector/drift-detector-cf-us-east-1.yaml --region us-east-1
+
+test:
+	python -m unittest tests/test_*.py
