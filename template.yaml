@@ -28,7 +28,7 @@ Resources:
     Properties:
       FunctionName: DriftDetector
       CodeUri: src/
-      Handler: drift-detector.lambda_handler
+      Handler: drift_detector.lambda_handler
       Runtime: python3.7
       Policies:
       - ReadOnlyAccess
