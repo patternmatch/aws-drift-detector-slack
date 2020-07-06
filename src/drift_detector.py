@@ -99,6 +99,8 @@ def detect_drift(cfclient, stacks):
                 'ResourceType': drift['ResourceType']
             })
 
+        stack['drift'].sort(key=lambda x: x['PhysicalResourceId'])
+
         stacks_with_drift.append(stack)
 
     return stacks_with_drift
