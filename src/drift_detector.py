@@ -106,6 +106,60 @@ def detect_drift(cfclient, stacks):
     return stacks_with_drift
 
 
+def build_slack_message(stack):
+    blocks = []
+
+    stack_url = get_stack_url(stack['StackId'])
+    stack_name = stack['StackName']
+
+    if stack['no_of_drifted_resources'] > 0:
+        blocks.append({
+            'type': 'section',
+            'text': {
+                'type': 'mrkdwn',
+                'text': 'Drift detected at *<' \
+                        + stack_url + '|' + stack_name \
+                        + '>*'
+            }
+        })
+
+        blocks.append({
+            'type': 'divider',
+        })
+
+        for drift in stack['drift']:
+            blocks.append({
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": get_emoji_for_status(drift['StackResourceDriftStatus'])\
+                                + " *" + drift['PhysicalResourceId'] + "*"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": drift['ResourceType']
+                    }
+                ]
+            })
+
+    else:
+        blocks.append({
+            'type': 'section',
+            'text': {
+                'type': 'mrkdwn',
+                'text': ':heavy_check_mark: No drift detected at *<' \
+                        + stack_url + '|' + stack_name \
+                        + '>*'
+            }
+        })
+
+
+    return {
+        'blocks': blocks
+    }
+
+
 def post_to_slack(stacks):
     url = os.environ['SLACK_WEBHOOK']
 
@@ -113,62 +167,25 @@ def post_to_slack(stacks):
         "Content-Type": "application/json"
     }
 
-    blocks = []
-
     for stack in stacks:
         if stack['no_of_drifted_resources'] == 0:
             continue
 
-        stack_url = get_stack_url(stack['StackId'])
-        stack_name = stack['StackName']
-        if stack['no_of_resources'] == 0:
-            percentage = "0"
-        else:
-            percentage = str(round(
-                stack['no_of_drifted_resources']/stack['no_of_resources']*100, 0
-            ))
+        message = build_slack_message(stack)
 
-        blocks.append({
-            'type': 'section',
-            'text': {
-                'type': 'mrkdwn',
-                'text': ':warning: *<' \
-                        + stack_url + '|' + stack_name \
-                        + '>* DRIFTED '
-                        + str(stack['no_of_drifted_resources']) \
-                        + '/' + str(stack['no_of_resources']) + ' resources'
-            }
-        })
+        print(json.dumps(message))
 
-        for drift in stack['drift']:
-            blocks.append({
-                'type': 'section',
-                'text': {
-                    'type': 'mrkdwn',
-                    'text': "\t"+drift['PhysicalResourceId']\
-                            +"\t"+drift['ResourceType']\
-                            +"\t"+drift['StackResourceDriftStatus']\
-                            +"\t"+get_emoji_for_status(drift['StackResourceDriftStatus'])
-                }
-            })
+        response = requests.post(url, headers=headers, data=json.dumps(message))
 
-    message = {
-        'blocks': blocks
-    }
-
-    print(json.dumps(message))
-
-    return requests.post(url, headers=headers, data=json.dumps(message))
+        print(response)
+        print(response.content)
 
 
 def lambda_handler(event, context):
     cfclient = boto3.client('cloudformation')
 
     stacks = detect_drift(cfclient, find_stacks(cfclient))
-    response = post_to_slack(stacks)
-
-    print(response)
-    print(response.content)
+    post_to_slack(stacks)
 
     return {
         "statusCode": 200,
