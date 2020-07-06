@@ -99,8 +99,6 @@ def detect_drift(cfclient, stacks):
                 'ResourceType': drift['ResourceType']
             })
 
-        print(stack['drift'])
-
         stacks_with_drift.append(stack)
 
     return stacks_with_drift
@@ -153,7 +151,6 @@ def build_slack_message(stack):
                         + '>*'
             }
         })
-
 
     return {
         'blocks': blocks
