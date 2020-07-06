@@ -18,15 +18,20 @@ before_script:
 test:
   script:
     - make test
+  except:
+    - develop
+    - master
 
 deploy-dev:
   script:
+    - make test
     - make deploy-dev
   only:
     - develop
 
 deploy-prod:
   script:
+    - make test
     - make deploy-prod
   only:
     - master
