@@ -15,7 +15,18 @@ before_script:
   - ./install.sh
   - source venv/bin/activate
 
-run:
+test:
   script:
     - make test
+
+deploy-dev:
+  script:
     - make deploy-dev
+  only:
+    - develop
+
+deploy-prod:
+  script:
+    - make deploy-prod
+  only:
+    - master
