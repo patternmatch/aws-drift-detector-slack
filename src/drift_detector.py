@@ -167,9 +167,6 @@ def post_to_slack(stacks):
     }
 
     for stack in stacks:
-        if stack['no_of_drifted_resources'] == 0:
-            continue
-
         message = build_slack_message(stack)
 
         print(json.dumps(message))
