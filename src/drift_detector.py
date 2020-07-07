@@ -99,6 +99,8 @@ def detect_drift(cfclient, stacks):
                 'ResourceType': drift['ResourceType']
             })
 
+        stack['drift'].sort(key=lambda x: x['PhysicalResourceId'])
+
         stacks_with_drift.append(stack)
 
     return stacks_with_drift
@@ -126,20 +128,26 @@ def build_slack_message(stack):
         })
 
         for drift in stack['drift']:
-            blocks.append({
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": get_emoji_for_status(drift['StackResourceDriftStatus'])\
-                                + " *" + drift['PhysicalResourceId'] + "*"
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": drift['ResourceType']
-                    }
-                ]
-            })
+            # Skip showing "no drift" resources.
+            if drift['StackResourceDriftStatus'] != 'IN_SYNC':
+                blocks.append({
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": get_emoji_for_status(drift['StackResourceDriftStatus'])\
+                                    + " *" + drift['PhysicalResourceId'] + "*"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": drift['ResourceType']
+                        }
+                    ]
+                })
+
+        blocks.append({
+            'type': 'divider',
+        })
 
     else:
         blocks.append({
@@ -165,9 +173,6 @@ def post_to_slack(stacks):
     }
 
     for stack in stacks:
-        if stack['no_of_drifted_resources'] == 0:
-            continue
-
         message = build_slack_message(stack)
 
         print(json.dumps(message))
