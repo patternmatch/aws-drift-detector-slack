@@ -115,7 +115,7 @@ def build_slack_message(stack):
             'type': 'section',
             'text': {
                 'type': 'mrkdwn',
-                'text': 'Drift detected at *<' \
+                'text': ':warning: Drift detected at *<' \
                         + stack_url + '|' + stack_name \
                         + '>*'
             }

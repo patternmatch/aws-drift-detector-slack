@@ -40,7 +40,7 @@ class TestSlackMessageBuild(unittest.TestCase):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "Drift detected at *<https://console.aws.amazon.com/cloudformation/home#/stacks/drifts?stackId=mock_stack_id|mock_stack_name>*"
+                        "text": ":warning: Drift detected at *<https://console.aws.amazon.com/cloudformation/home#/stacks/drifts?stackId=mock_stack_id|mock_stack_name>*"
                     }
                 },
                 {
