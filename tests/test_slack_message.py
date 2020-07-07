@@ -51,19 +51,6 @@ class TestSlackMessageBuild(unittest.TestCase):
                     "fields": [
                         {
                             "type": "mrkdwn",
-                            "text": ":heavy_check_mark: *mock_physical_resource_id_1*"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "AWS::S3::Bucket"
-                        }
-                    ]
-                },
-                {
-                    "type": "section",
-                    "fields": [
-                        {
-                            "type": "mrkdwn",
                             "text": ":warning: *mock_physical_resource_id_2*"
                         },
                         {
@@ -84,6 +71,9 @@ class TestSlackMessageBuild(unittest.TestCase):
                             "text": "AWS::ApiGateway::RestApi"
                         }
                     ]
+                },
+                {
+                    "type": "divider"
                 },
             ]
         })
