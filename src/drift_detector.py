@@ -162,17 +162,12 @@ def build_slack_message(stack):
             if drift['StackResourceDriftStatus'] != 'IN_SYNC':
                 blocks.append({
                     "type": "section",
-                    "fields": [
-                        {
-                            "type": "mrkdwn",
-                            "text": get_emoji_for_status(drift['StackResourceDriftStatus'])\
-                                    + " *" + drift['PhysicalResourceId'] + "*"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": drift['ResourceType']
-                        }
-                    ]
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": ">" + get_emoji_for_status(drift['StackResourceDriftStatus'])\
+                            + " *" + drift['PhysicalResourceId'] + "*\n>:small_orange_diamond: _"\
+                            + drift['ResourceType'] + "_"
+                    },
                 })
 
         blocks.append({
