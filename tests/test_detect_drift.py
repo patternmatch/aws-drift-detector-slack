@@ -155,5 +155,41 @@ class TestDetectDrift(unittest.TestCase):
         ])
 
 
+    def test_detect_drift_for_resource_with_arn_as_id(self):
+        """
+        Test that drift is correctly detected for resources with arn id
+        """
+        mock_stacks = [
+            {
+                'StackName': 'stack_name'
+            }
+        ]
+
+        mock_cfclient.describe_stack_resource_drifts = MagicMock(return_value={
+            'StackResourceDrifts': [
+                {
+                    'StackResourceDriftStatus': 'MODIFIED',
+                    'PhysicalResourceId': 'arn:aws:lambda:us-east-1:450349639042:function:serverless-housekeeping-gdrive-prod-stuff:4',
+                    'ResourceType': 'resource_type',
+                },
+            ],
+        })
+
+        self.assertEqual(detect_drift(mock_cfclient, mock_stacks), [
+            {
+                'StackName': 'stack_name',
+                'drift': [
+                    {
+                        'PhysicalResourceId': 'serverless-housekeeping-gdrive-prod-stuff:4',
+                        'ResourceType': 'resource_type',
+                        'StackResourceDriftStatus': 'MODIFIED',
+                    },
+                ],
+                'no_of_drifted_resources': 1,
+                'no_of_resources': 1,
+            },
+        ])
+
+
 if __name__ == '__main__':
     unittest.main()

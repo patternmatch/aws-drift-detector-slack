@@ -10,6 +10,36 @@ MAX_ATTEMPTS = 100
 ATTEMPT_WAIT_TIME = 6
 
 
+def is_arn(physical_resource_id):
+    return physical_resource_id.startswith('arn:aws:')
+
+
+def parse_arn(arn):
+    # Function borrowed from: https://gist.github.com/gene1wood/5299969edc4ef21d8efcfea52158dd40
+
+    # If given string is not an arn, simply return it.
+    if is_arn(arn) is False:
+        return arn
+
+    # http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    elements = arn.split(':', 5)
+    result = {
+        'arn': elements[0],
+        'partition': elements[1],
+        'service': elements[2],
+        'region': elements[3],
+        'account': elements[4],
+        'resource': elements[5],
+        'resource_type': None
+    }
+    if '/' in result['resource']:
+        result['resource_type'], result['resource'] = result['resource'].split('/', 1)
+    elif ':' in result['resource']:
+        result['resource_type'], result['resource'] = result['resource'].split(':', 1)
+
+    return result['resource']
+
+
 def get_emoji_for_status(status):
     if(status == 'DELETED'):
         return ':x:'
@@ -94,7 +124,7 @@ def detect_drift(cfclient, stacks):
                 stack['no_of_drifted_resources'] += 1
 
             stack['drift'].append({
-                'PhysicalResourceId': drift['PhysicalResourceId'],
+                'PhysicalResourceId': parse_arn(drift['PhysicalResourceId']),
                 'StackResourceDriftStatus': drift['StackResourceDriftStatus'],
                 'ResourceType': drift['ResourceType']
             })
