@@ -48,29 +48,17 @@ class TestSlackMessageBuild(unittest.TestCase):
                 },
                 {
                     "type": "section",
-                    "fields": [
-                        {
-                            "type": "mrkdwn",
-                            "text": ":warning: *mock_physical_resource_id_2*"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "AWS::ApiGateway::Method"
-                        }
-                    ]
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": ">:warning: *mock_physical_resource_id_2*\n>:small_orange_diamond: _AWS::ApiGateway::Method_"
+                    }
                 },
                 {
                     "type": "section",
-                    "fields": [
-                        {
-                            "type": "mrkdwn",
-                            "text": ":x: *mock_physical_resource_id_3*"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "AWS::ApiGateway::RestApi"
-                        }
-                    ]
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": ">:x: *mock_physical_resource_id_3*\n>:small_orange_diamond: _AWS::ApiGateway::RestApi_"
+                    }
                 },
                 {
                     "type": "divider"
