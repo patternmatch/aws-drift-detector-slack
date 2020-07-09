@@ -6,6 +6,13 @@ Parameters:
     Type: String
   Cron:
     Type: String
+  ShowInSyncResources:
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'false'
+    Description: 'Display resources that have no drift (in sync)'
+    Type: String
 Globals:
   Function:
     Timeout: 300
@@ -51,6 +58,8 @@ Resources:
         Variables:
           SLACK_WEBHOOK:
             Ref: SlackWebhook
+          SHOW_IN_SYNC:
+            Ref: ShowInSyncResources
       Events:
         RunOnSchedule:
           Type: Schedule
