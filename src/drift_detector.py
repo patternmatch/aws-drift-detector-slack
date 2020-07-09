@@ -142,6 +142,8 @@ def build_slack_message(stack):
     stack_url = get_stack_url(stack['StackId'])
     stack_name = stack['StackName']
 
+    show_in_sync_resources = os.environ.get('SHOW_IN_SYNC', 'false')
+
     if stack['no_of_drifted_resources'] > 0:
         blocks.append({
             'type': 'section',
@@ -158,17 +160,18 @@ def build_slack_message(stack):
         })
 
         for drift in stack['drift']:
-            # Skip showing "no drift" resources.
-            if drift['StackResourceDriftStatus'] != 'IN_SYNC':
-                blocks.append({
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": ">" + get_emoji_for_status(drift['StackResourceDriftStatus'])\
-                            + " *" + drift['PhysicalResourceId'] + "*\n>:small_orange_diamond: _"\
-                            + drift['ResourceType'] + "_"
-                    },
-                })
+            if show_in_sync_resources == "false" and drift['StackResourceDriftStatus'] == 'IN_SYNC':
+                continue
+
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": ">" + get_emoji_for_status(drift['StackResourceDriftStatus'])\
+                        + " *" + drift['PhysicalResourceId'] + "*\n>:small_orange_diamond: _"\
+                        + drift['ResourceType'] + "_"
+                },
+            })
 
         blocks.append({
             'type': 'divider',
