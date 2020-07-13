@@ -35,7 +35,6 @@ Resources:
   DriftDetectorFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: DriftDetector
       CodeUri: src/
       Handler: drift_detector.lambda_handler
       Runtime: python3.7
