@@ -5,6 +5,7 @@ import urllib.parse
 import sys
 import time
 import os
+import re
 
 MAX_ATTEMPTS = 100
 ATTEMPT_WAIT_TIME = 6
@@ -68,12 +69,15 @@ def is_status_proper_to_check_drift(status):
 def find_stacks(cfclient):
     stacks = []
 
+    stack_regex = re.compile(os.environ.get('STACK_REGEX', '.*'))
+
     paginator = cfclient.get_paginator('describe_stacks')
 
     response_iterator = paginator.paginate()
     for page in response_iterator:
         for stack in page['Stacks']:
-            if is_status_proper_to_check_drift(stack['StackStatus']):
+            if is_status_proper_to_check_drift(stack['StackStatus']) \
+                and stack_regex.match(stack['StackName']):
                 stacks.append(stack)
 
     return stacks

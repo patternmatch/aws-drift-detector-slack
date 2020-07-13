@@ -13,6 +13,8 @@ Parameters:
     Default: 'false'
     Description: 'Display resources that have no drift (in sync)'
     Type: String
+  StackRegex:
+    Type: String
 Globals:
   Function:
     Timeout: 300
@@ -60,6 +62,8 @@ Resources:
             Ref: SlackWebhook
           SHOW_IN_SYNC:
             Ref: ShowInSyncResources
+          STACK_REGEX:
+            Ref: StackRegex
       Events:
         RunOnSchedule:
           Type: Schedule
