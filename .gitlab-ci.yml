@@ -33,5 +33,6 @@ deploy-prod:
   script:
     - make test
     - make deploy-prod
+    - make publish
   only:
     - master
