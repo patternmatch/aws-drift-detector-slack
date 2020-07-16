@@ -43,21 +43,6 @@ Resources:
       Runtime: python3.7
       Policies:
       - ReadOnlyAccess
-      - Version: '2012-10-17'
-        Statement:
-        - Action:
-          - cloudformation:Describe*
-          - cloudformation:Detect*
-          - cloudformation:List*
-          Resource:
-          - '*'
-          Effect: Allow
-        - Action:
-          - logs:CreateLogGroup
-          - logs:CreateLogStream
-          - logs:PutLogEvents
-          Resource: '*'
-          Effect: Allow
       Environment:
         Variables:
           SLACK_WEBHOOK:
