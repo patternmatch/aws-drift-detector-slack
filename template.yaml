@@ -24,14 +24,14 @@ Globals:
 Metadata:
   AWS::ServerlessRepo::Application:
     Name: slack-drift-detector-notification
-    Description: Serverless stack which notifies about drift detection of your stacks to your Slack
+    Description: 'Serverless stack which notifies you about drift detection on your Slack channel. You can specify which stacks should be checked, and at what interval.'
     Author: pattern-match-team
     SpdxLicenseId: Apache-2.0
     LicenseUrl: docs/LICENCE
     ReadmeUrl: docs/README.md
     Labels: ['cloudformation', 'slack', 'drift']
     HomePageUrl: https://driftdetector.com
-    SemanticVersion: 2.0.1
+    SemanticVersion: 2.0.2
     SourceCodeUrl: https://github.com/patternmatch/aws-drift-detector-slack
 
 Resources:
