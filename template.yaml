@@ -6,6 +6,7 @@ Parameters:
     Description: 'Webhook used to post messages about drift detection'
     Type: String
   Cron:
+    Default: '0 0 */12 * ? *'
     Description: 'Interval at which drift detector should scan stacks'
     Type: String
   ShowInSyncResources:
@@ -16,6 +17,7 @@ Parameters:
     Description: 'Switch do display resources that have no drift (in sync)'
     Type: String
   StackRegex:
+    Default: '.*'
     Description: 'Regex to define which stacks should scanned. This is using python style regex ("re" module). Example: to only monitor stacks with "prod" in their name, use ".*prod.*"'
     Type: String
 Globals:
@@ -31,7 +33,7 @@ Metadata:
     ReadmeUrl: docs/README.md
     Labels: ['cloudformation', 'slack', 'drift']
     HomePageUrl: https://driftdetector.com
-    SemanticVersion: 2.0.3
+    SemanticVersion: 2.0.4
     SourceCodeUrl: https://github.com/patternmatch/aws-drift-detector-slack
 
 Resources:
