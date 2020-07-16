@@ -3,17 +3,20 @@ Transform: AWS::Serverless-2016-10-31
 Description: 'AWS CloudFormation drift-detector to Slack'
 Parameters:
   SlackWebhook:
+    Description: 'Webhook used to post messages about drift detection'
     Type: String
   Cron:
+    Description: 'Interval at which drift detector should scan stacks'
     Type: String
   ShowInSyncResources:
     AllowedValues:
       - 'true'
       - 'false'
     Default: 'false'
-    Description: 'Display resources that have no drift (in sync)'
+    Description: 'Switch do display resources that have no drift (in sync)'
     Type: String
   StackRegex:
+    Description: 'Regex to define which stacks should scanned. This is using python style regex ("re" module). Example: to only monitor stacks with "prod" in their name, use ".*prod.*"'
     Type: String
 Globals:
   Function:
@@ -28,7 +31,7 @@ Metadata:
     ReadmeUrl: docs/README.md
     Labels: ['cloudformation', 'slack', 'drift']
     HomePageUrl: https://driftdetector.com
-    SemanticVersion: 2.0.0
+    SemanticVersion: 2.0.1
     SourceCodeUrl: https://github.com/patternmatch/aws-drift-detector-slack
 
 Resources:
