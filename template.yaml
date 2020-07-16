@@ -31,7 +31,7 @@ Metadata:
     ReadmeUrl: docs/README.md
     Labels: ['cloudformation', 'slack', 'drift']
     HomePageUrl: https://driftdetector.com
-    SemanticVersion: 2.0.2
+    SemanticVersion: 2.0.3
     SourceCodeUrl: https://github.com/patternmatch/aws-drift-detector-slack
 
 Resources:
