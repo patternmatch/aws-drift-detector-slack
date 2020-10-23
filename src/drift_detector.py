@@ -42,20 +42,18 @@ def parse_arn(arn):
 
 
 def get_emoji_for_status(status):
-    if(status == 'DELETED'):
+    if status == 'DELETED':
         return ':x:'
-    elif(status == 'MODIFIED'):
+    elif status == 'MODIFIED':
         return ':warning:'
-    elif(status == 'IN_SYNC'):
+    elif status == 'IN_SYNC':
         return ':heavy_check_mark:'
 
     return ''
 
 
 def get_stack_url(stack_id):
-    return 'https://console.aws.amazon.com/'\
-           +'cloudformation/home#/stacks/drifts?stackId='\
-           +urllib.parse.quote(stack_id)
+    return f'https://console.aws.amazon.com/cloudformation/home#/stacks/drifts?stackId={urllib.parse.quote(stack_id)}'
 
 
 def is_status_proper_to_check_drift(status):
@@ -66,57 +64,43 @@ def is_status_proper_to_check_drift(status):
     )
 
 
-def find_stacks(cfclient):
+def find_stacks(cf_client):
     stacks = []
 
     stack_regex = re.compile(os.environ.get('STACK_REGEX', '.*'))
 
-    paginator = cfclient.get_paginator('describe_stacks')
+    paginator = cf_client.get_paginator('describe_stacks')
 
     response_iterator = paginator.paginate()
     for page in response_iterator:
         for stack in page['Stacks']:
             if is_status_proper_to_check_drift(stack['StackStatus']) \
-                and stack_regex.match(stack['StackName']):
+                    and stack_regex.match(stack['StackName']):
                 stacks.append(stack)
 
     return stacks
 
 
-def detect_drift(cfclient, stacks):
-    stacks_with_drift = []
+def detect_drift(cf_client, stacks):
     stacks_checking_ids = []
 
     for stack in stacks:
-        stacks_checking_ids.append(cfclient.detect_stack_drift(
+        stacks_checking_ids.append(cf_client.detect_stack_drift(
             StackName=stack['StackName']
         )['StackDriftDetectionId'])
 
-    attempts = 0
+    detection_failed_stacks_ids = check_drifts_detection_status(cf_client, stacks_checking_ids)
+    detection_complete_stacks = list(filter(lambda s: s['StackId'] not in detection_failed_stacks_ids, stacks))
+    detection_failed_stacks = list(filter(lambda s: s['StackId'] in detection_failed_stacks_ids, stacks))
 
-    for stack_id in stacks_checking_ids:
-        while True:
-            response = cfclient.describe_stack_drift_detection_status(
-                StackDriftDetectionId=stack_id
-            )
+    return append_drift_info(cf_client, detection_complete_stacks), detection_failed_stacks
 
-            if response['DetectionStatus'] == 'DETECTION_COMPLETE':
-                break
-            elif response['DetectionStatus'] == 'DETECTION_FAILED':
-                print('Detection failed')
-                print(response)
-                break
 
-            if attempts < MAX_ATTEMPTS:
-                attempts += 1
-                sleep = ATTEMPT_WAIT_TIME
-                time.sleep(sleep)
-            else:
-                print('Max attempts exceeded')
-                sys.exit(1)
+def append_drift_info(cf_client, detection_complete_stacks):
+    stacks_with_drift_info = []
 
-    for stack in stacks:
-        response = cfclient.describe_stack_resource_drifts(
+    for stack in detection_complete_stacks:
+        response = cf_client.describe_stack_resource_drifts(
             StackName=stack['StackName']
         )
         stack['drift'] = []
@@ -135,91 +119,139 @@ def detect_drift(cfclient, stacks):
 
         stack['drift'].sort(key=lambda x: x['PhysicalResourceId'])
 
-        stacks_with_drift.append(stack)
+        stacks_with_drift_info.append(stack)
 
-    return stacks_with_drift
+    return stacks_with_drift_info
+
+
+def check_drifts_detection_status(cf_client, stacks_checking_ids):
+    detection_failed_stack_ids = []
+    attempts = 0
+
+    for detection_id in stacks_checking_ids:
+        while True:
+            response = cf_client.describe_stack_drift_detection_status(
+                StackDriftDetectionId=detection_id
+            )
+
+            if response['DetectionStatus'] == 'DETECTION_COMPLETE':
+                break
+            elif response['DetectionStatus'] == 'DETECTION_FAILED':
+                stack_id = response['StackId']
+                fail_reason = response['DetectionStatusReason']
+                print(f'Drift detection has failed for the Stack with ID: {stack_id} with reason: {fail_reason}')
+                detection_failed_stack_ids.append(stack_id)
+                break
+
+            if attempts < MAX_ATTEMPTS:
+                attempts += 1
+                sleep = ATTEMPT_WAIT_TIME
+                time.sleep(sleep)
+            else:
+                print('Max attempts exceeded')
+                sys.exit(1)
+
+    return detection_failed_stack_ids
 
 
 def build_slack_message(stack):
-    blocks = []
-
     stack_url = get_stack_url(stack['StackId'])
     stack_name = stack['StackName']
 
     show_in_sync_resources = os.environ.get('SHOW_IN_SYNC', 'false')
 
     if stack['no_of_drifted_resources'] > 0:
-        blocks.append({
-            'type': 'section',
-            'text': {
-                'type': 'mrkdwn',
-                'text': ':warning: Drift detected at *<' \
-                        + stack_url + '|' + stack_name \
-                        + '>*'
-            }
-        })
-
-        blocks.append({
-            'type': 'divider',
-        })
-
-        for drift in stack['drift']:
-            if show_in_sync_resources == "false" and drift['StackResourceDriftStatus'] == 'IN_SYNC':
-                continue
-
-            blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": ">" + get_emoji_for_status(drift['StackResourceDriftStatus'])\
-                        + " *" + drift['PhysicalResourceId'] + "*\n>:small_orange_diamond: _"\
-                        + drift['ResourceType'] + "_"
-                },
-            })
-
-        blocks.append({
-            'type': 'divider',
-        })
+        blocks = create_drifted_stack_message_blocks(show_in_sync_resources, stack, stack_name, stack_url)
 
     else:
-        blocks.append({
-            'type': 'section',
-            'text': {
-                'type': 'mrkdwn',
-                'text': ':heavy_check_mark: No drift detected at *<' \
-                        + stack_url + '|' + stack_name \
-                        + '>*'
-            }
-        })
+        blocks = create_not_drifted_stack_message_blocks(stack_name, stack_url)
 
     return {
         'blocks': blocks
     }
 
 
-def post_to_slack(stacks):
+def create_not_drifted_stack_message_blocks(stack_name, stack_url):
+    return [{
+        'type': 'section',
+        'text': {
+            'type': 'mrkdwn',
+            'text': ':heavy_check_mark: No drift detected at *<'
+                    + stack_url + '|' + stack_name
+                    + '>*'
+        }
+    }]
+
+
+def create_drifted_stack_message_blocks(show_in_sync_resources, stack, stack_name, stack_url):
+    blocks = [{
+        'type': 'section',
+        'text': {
+            'type': 'mrkdwn',
+            'text': ':warning: Drift detected at *<'
+                    + stack_url + '|' + stack_name
+                    + '>*'
+        }
+    }, {
+        'type': 'divider',
+    }]
+
+    for drift in stack['drift']:
+        if show_in_sync_resources == "false" and drift['StackResourceDriftStatus'] == 'IN_SYNC':
+            continue
+
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ">" + get_emoji_for_status(drift['StackResourceDriftStatus'])
+                        + " *" + drift['PhysicalResourceId'] + "*\n>:small_orange_diamond: _"
+                        + drift['ResourceType'] + "_"
+            },
+        })
+    blocks.append({
+        'type': 'divider',
+    })
+
+    return blocks
+
+
+def build_detection_failed_slack_message(detection_failed_stack):
+    stack_url = get_stack_url(detection_failed_stack['StackId'])
+    stack_name = detection_failed_stack['StackName']
+
+    return {'blocks': [{
+        'type': 'section',
+        'text': {
+            'type': 'mrkdwn',
+            'text': ':question: Detection failed at *<'
+                    + stack_url + '|' + stack_name
+                    + '>*'
+        }
+    }]}
+
+
+def post_to_slack(stacks, detection_failed_stacks):
     url = os.environ['SLACK_WEBHOOK']
 
     headers = {
         "Content-Type": "application/json"
     }
 
+    for detection_failed_stack in detection_failed_stacks:
+        message = build_detection_failed_slack_message(detection_failed_stack)
+        requests.post(url, headers=headers, data=json.dumps(message))
+
     for stack in stacks:
         message = build_slack_message(stack)
-
-        print(json.dumps(message))
-
-        response = requests.post(url, headers=headers, data=json.dumps(message))
-
-        print(response)
-        print(response.content)
+        requests.post(url, headers=headers, data=json.dumps(message))
 
 
 def lambda_handler(event, context):
-    cfclient = boto3.client('cloudformation')
+    cf_client = boto3.client('cloudformation')
 
-    stacks = detect_drift(cfclient, find_stacks(cfclient))
-    post_to_slack(stacks)
+    stacks, detection_failed_stacks = detect_drift(cf_client, find_stacks(cf_client))
+    post_to_slack(stacks, detection_failed_stacks)
 
     return {
         "statusCode": 200,

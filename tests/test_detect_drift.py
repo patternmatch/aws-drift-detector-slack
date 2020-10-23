@@ -3,29 +3,30 @@ import unittest
 from unittest.mock import MagicMock
 from src.drift_detector import detect_drift
 
+
 class MockCFClient: pass
 
-mock_cfclient = MockCFClient()
+
+mock_cf_client = MockCFClient()
 
 
 class TestDetectDrift(unittest.TestCase):
     def setUp(self):
-        mock_cfclient.detect_stack_drift = MagicMock(return_value={
+        mock_cf_client.detect_stack_drift = MagicMock(return_value={
             'StackDriftDetectionId': 42
         })
-        mock_cfclient.describe_stack_drift_detection_status = MagicMock(return_value={
+        mock_cf_client.describe_stack_drift_detection_status = MagicMock(return_value={
             'DetectionStatus': 'DETECTION_COMPLETE'
         })
-        mock_cfclient.describe_stack_resource_drifts = MagicMock(return_value={
+        mock_cf_client.describe_stack_resource_drifts = MagicMock(return_value={
             'StackResourceDrifts': [
                 {
                     'StackResourceDriftStatus': 'MODIFIED',
                     'PhysicalResourceId': 'physical_resource_id',
-                    'ResourceType': 'resource_type',
-                },
-            ],
+                    'ResourceType': 'resource_type'
+                }
+            ]
         })
-
 
     def test_detect_drift(self):
         """
@@ -33,13 +34,17 @@ class TestDetectDrift(unittest.TestCase):
         """
         mock_stacks = [
             {
-                'StackName': 'stack_name'
+                'StackName': 'stack_name',
+                'StackId': 'stack_id'
             }
         ]
 
-        self.assertEqual(detect_drift(mock_cfclient, mock_stacks), [
+        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+
+        self.assertEqual(stacks, [
             {
                 'StackName': 'stack_name',
+                'StackId': 'stack_id',
                 'drift': [
                     {
                         'PhysicalResourceId': 'physical_resource_id',
@@ -49,9 +54,8 @@ class TestDetectDrift(unittest.TestCase):
                 ],
                 'no_of_drifted_resources': 1,
                 'no_of_resources': 1,
-            },
+            }
         ])
-
 
     def test_detect_drift_with_no_drift(self):
         """
@@ -59,11 +63,12 @@ class TestDetectDrift(unittest.TestCase):
         """
         mock_stacks = [
             {
-                'StackName': 'stack_name'
+                'StackName': 'stack_name',
+                'StackId': 'stack_id'
             },
         ]
 
-        mock_cfclient.describe_stack_resource_drifts = MagicMock(return_value={
+        mock_cf_client.describe_stack_resource_drifts = MagicMock(return_value={
             'StackResourceDrifts': [
                 {
                     'StackResourceDriftStatus': 'IN_SYNC',
@@ -78,9 +83,12 @@ class TestDetectDrift(unittest.TestCase):
             ],
         })
 
-        self.assertEqual(detect_drift(mock_cfclient, mock_stacks), [
+        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+
+        self.assertEqual(stacks, [
             {
                 'StackName': 'stack_name',
+                'StackId': 'stack_id',
                 'drift': [
                     {
                         'PhysicalResourceId': 'physical_resource_id_one',
@@ -98,18 +106,18 @@ class TestDetectDrift(unittest.TestCase):
             },
         ])
 
-
     def test_detect_drift_sorting(self):
         """
         Test that drift is correctly detected and sorted
         """
         mock_stacks = [
             {
-                'StackName': 'stack_name'
+                'StackName': 'stack_name',
+                'StackId': 'stack_id'
             },
         ]
 
-        mock_cfclient.describe_stack_resource_drifts = MagicMock(return_value={
+        mock_cf_client.describe_stack_resource_drifts = MagicMock(return_value={
             'StackResourceDrifts': [
                 {
                     'StackResourceDriftStatus': 'IN_SYNC',
@@ -129,9 +137,12 @@ class TestDetectDrift(unittest.TestCase):
             ],
         })
 
-        self.assertEqual(detect_drift(mock_cfclient, mock_stacks), [
+        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+
+        self.assertEqual(stacks, [
             {
                 'StackName': 'stack_name',
+                'StackId': 'stack_id',
                 'drift': [
                     {
                         'PhysicalResourceId': 'aaaaaaaa',
@@ -154,18 +165,18 @@ class TestDetectDrift(unittest.TestCase):
             },
         ])
 
-
     def test_detect_drift_for_resource_with_arn_as_id(self):
         """
         Test that drift is correctly detected for resources with arn id
         """
         mock_stacks = [
             {
-                'StackName': 'stack_name'
+                'StackName': 'stack_name',
+                'StackId': 'stack_id'
             }
         ]
 
-        mock_cfclient.describe_stack_resource_drifts = MagicMock(return_value={
+        mock_cf_client.describe_stack_resource_drifts = MagicMock(return_value={
             'StackResourceDrifts': [
                 {
                     'StackResourceDriftStatus': 'MODIFIED',
@@ -175,9 +186,12 @@ class TestDetectDrift(unittest.TestCase):
             ],
         })
 
-        self.assertEqual(detect_drift(mock_cfclient, mock_stacks), [
+        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+
+        self.assertEqual(stacks, [
             {
                 'StackName': 'stack_name',
+                'StackId': 'stack_id',
                 'drift': [
                     {
                         'PhysicalResourceId': 'serverless-housekeeping-gdrive-prod-stuff:4',
@@ -187,6 +201,55 @@ class TestDetectDrift(unittest.TestCase):
                 ],
                 'no_of_drifted_resources': 1,
                 'no_of_resources': 1,
+            },
+        ])
+
+    def test_detect_drift_with_failed_detection(self):
+        """
+        Test that failed detection are correctly handled
+        """
+        mock_stacks = [
+            {
+                'StackName': 'stack_name',
+                'StackId': 'stack_id'
+            },
+        ]
+
+        mock_cf_client.describe_stack_resource_drifts = MagicMock(return_value={
+            'StackResourceDrifts': [
+                {
+                    'StackResourceDriftStatus': 'IN_SYNC',
+                    'PhysicalResourceId': 'physical_resource_id_one',
+                    'ResourceType': 'resource_type',
+                },
+                {
+                    'StackResourceDriftStatus': 'IN_SYNC',
+                    'PhysicalResourceId': 'physical_resource_id_two',
+                    'ResourceType': 'resource_type',
+                },
+            ],
+        })
+
+        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+
+        self.assertEqual(stacks, [
+            {
+                'StackName': 'stack_name',
+                'StackId': 'stack_id',
+                'drift': [
+                    {
+                        'PhysicalResourceId': 'physical_resource_id_one',
+                        'ResourceType': 'resource_type',
+                        'StackResourceDriftStatus': 'IN_SYNC',
+                    },
+                    {
+                        'PhysicalResourceId': 'physical_resource_id_two',
+                        'ResourceType': 'resource_type',
+                        'StackResourceDriftStatus': 'IN_SYNC',
+                    },
+                ],
+                'no_of_drifted_resources': 0,
+                'no_of_resources': 2,
             },
         ])
 
