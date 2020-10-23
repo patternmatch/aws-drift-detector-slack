@@ -27,11 +27,11 @@ MOCK_STACK = {
     'no_of_resources': 3
 }
 
+
 class TestSlackMessageBuild(unittest.TestCase):
     def tearDown(self):
         # Reset 'SHOW_IN_SYNC' back to default, after each test.
         os.environ['SHOW_IN_SYNC'] = 'false'
-
 
     def test_drift_message_generation(self):
         """
@@ -72,7 +72,6 @@ class TestSlackMessageBuild(unittest.TestCase):
             ]
         })
 
-
     def test_no_drift_message_generation(self):
         """
         Test that no drift slack message is build correctly given stack data
@@ -95,7 +94,6 @@ class TestSlackMessageBuild(unittest.TestCase):
                 },
             ]
         })
-
 
     def test_drift_message_generation_with_in_sync_resources(self):
         """

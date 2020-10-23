@@ -22,7 +22,7 @@ Parameters:
     Type: String
 Globals:
   Function:
-    Timeout: 300
+    Timeout: 900
 Metadata:
   AWS::ServerlessRepo::Application:
     Name: slack-drift-detector-notification
