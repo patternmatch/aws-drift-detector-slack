@@ -31,7 +31,7 @@ Metadata:
     SpdxLicenseId: Apache-2.0
     LicenseUrl: docs/LICENCE
     ReadmeUrl: docs/README.md
-    Labels: ['cloudformation', 'slack', 'drift']
+    Labels: [ 'cloudformation', 'slack', 'drift' ]
     HomePageUrl: https://driftdetector.com
     SemanticVersion: 2.0.4
     SourceCodeUrl: https://github.com/patternmatch/aws-drift-detector-slack
@@ -40,11 +40,11 @@ Resources:
   DriftDetectorFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/
+      CodeUri: drift_detector/
       Handler: drift_detector.lambda_handler
       Runtime: python3.7
       Policies:
-      - ReadOnlyAccess
+        - ReadOnlyAccess
       Environment:
         Variables:
           SLACK_WEBHOOK:

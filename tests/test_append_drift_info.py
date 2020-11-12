@@ -1,7 +1,10 @@
 import unittest
+import sys
+
+sys.path.insert(0, './drift_detector')
 
 from unittest.mock import MagicMock
-from src.drift_detector import append_drift_info
+from drift_detector.drift_detector import append_drift_info
 
 
 class MockCFClient: pass
