@@ -1,7 +1,10 @@
 import os
+import sys
 import unittest
 
-from src.drift_detector import build_slack_message
+sys.path.insert(0, '../drift_detector')
+
+from drift_detector.drift_detector import build_slack_message
 
 MOCK_STACK = {
     'StackId': 'mock_stack_id',

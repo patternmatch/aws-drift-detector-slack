@@ -1,7 +1,10 @@
 import unittest
+import sys
 
+sys.path.insert(0, './drift_detector')
+
+from drift_detector.drift_detector import check_drifts_detection_status
 from unittest.mock import Mock
-from src.drift_detector import check_drifts_detection_status
 
 
 class MockCFClient: pass
@@ -23,6 +26,7 @@ class TestCheckDriftsDetectionStatus(unittest.TestCase):
 
         status_per_id = {
             complete_detection_id: {
+                'StackId': 'complete_stack_id',
                 'DetectionStatus': 'DETECTION_COMPLETE'
             },
             failed_detection_id: {
@@ -37,9 +41,9 @@ class TestCheckDriftsDetectionStatus(unittest.TestCase):
         mock_cf_client.describe_stack_drift_detection_status = Mock(
             side_effect=mock_describe_stack_drift_detection_status)
 
-        detection_failed_stack_ids = check_drifts_detection_status(mock_cf_client, stacks_checking_ids)
+        detection_complete_stack_ids = check_drifts_detection_status(mock_cf_client, stacks_checking_ids)
 
-        self.assertEqual(['failed_stack_id'], detection_failed_stack_ids)
+        self.assertEqual(['complete_stack_id'], detection_complete_stack_ids)
 
 
 if __name__ == '__main__':

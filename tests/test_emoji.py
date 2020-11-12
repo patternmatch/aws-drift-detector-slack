@@ -1,6 +1,9 @@
 import unittest
+import sys
 
-from src.drift_detector import get_emoji_for_status
+sys.path.insert(0, './drift_detector')
+
+from drift_detector.drift_detector import get_emoji_for_status
 
 
 class TestEmoji(unittest.TestCase):
@@ -10,20 +13,17 @@ class TestEmoji(unittest.TestCase):
         """
         self.assertEqual(get_emoji_for_status('DELETED'), ":x:")
 
-
     def test_modified_status_emoji(self):
         """
         Test that correct emoji is returned for modified status
         """
         self.assertEqual(get_emoji_for_status('MODIFIED'), ":warning:")
 
-
     def test_in_sync_status_emoji(self):
         """
         Test that correct emoji is returned for in sync status
         """
         self.assertEqual(get_emoji_for_status('IN_SYNC'), ":heavy_check_mark:")
-
 
     def test_fallback_status_emoji(self):
         """

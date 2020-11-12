@@ -6,9 +6,12 @@ import sys
 import time
 import os
 import re
+from utils import chunks
 
-MAX_ATTEMPTS = 100
-ATTEMPT_WAIT_TIME = 6
+CHECK_STATUS_MAX_ATTEMPTS = 100
+CHECK_STATUS_ATTEMPT_WAIT_TIME = 6
+CF_CALLS_CHUNK_SIZE = 3
+DRIFT_DETECTION_MAX_RETRIES = 5
 
 
 def is_arn(physical_resource_id):
@@ -82,16 +85,25 @@ def find_stacks(cf_client):
 
 
 def detect_drift(cf_client, stacks):
-    stacks_checking_ids = []
+    stacks_to_check = stacks
+    attempts = 0
 
-    for stack in stacks:
-        stacks_checking_ids.append(cf_client.detect_stack_drift(
-            StackName=stack['StackName']
-        )['StackDriftDetectionId'])
+    while stacks_to_check and attempts < DRIFT_DETECTION_MAX_RETRIES:
+        attempts += 1
+        split_into_chunks_stacks = chunks(stacks_to_check, CF_CALLS_CHUNK_SIZE)
 
-    detection_failed_stacks_ids = check_drifts_detection_status(cf_client, stacks_checking_ids)
-    detection_complete_stacks = list(filter(lambda s: s['StackId'] not in detection_failed_stacks_ids, stacks))
-    detection_failed_stacks = list(filter(lambda s: s['StackId'] in detection_failed_stacks_ids, stacks))
+        for chunk in split_into_chunks_stacks:
+            stacks_checking_ids = []
+            for stack in chunk:
+                stacks_checking_ids.append(cf_client.detect_stack_drift(
+                    StackName=stack['StackName']
+                )['StackDriftDetectionId'])
+
+            completed_stacks_ids = check_drifts_detection_status(cf_client, stacks_checking_ids)
+            stacks_to_check = list(filter(lambda s: s['StackId'] not in completed_stacks_ids, stacks_to_check))
+
+    detection_complete_stacks = list(filter(lambda s: s not in stacks_to_check, stacks))
+    detection_failed_stacks = list(filter(lambda s: s in stacks_to_check, stacks))
 
     return append_drift_info(cf_client, detection_complete_stacks), detection_failed_stacks
 
@@ -125,7 +137,7 @@ def append_drift_info(cf_client, detection_complete_stacks):
 
 
 def check_drifts_detection_status(cf_client, stacks_checking_ids):
-    detection_failed_stack_ids = []
+    detection_complete_stack_ids = []
     attempts = 0
 
     for detection_id in stacks_checking_ids:
@@ -135,23 +147,23 @@ def check_drifts_detection_status(cf_client, stacks_checking_ids):
             )
 
             if response['DetectionStatus'] == 'DETECTION_COMPLETE':
+                detection_complete_stack_ids.append(response['StackId'])
                 break
             elif response['DetectionStatus'] == 'DETECTION_FAILED':
                 stack_id = response['StackId']
                 fail_reason = response['DetectionStatusReason']
                 print(f'Drift detection has failed for the Stack with ID: {stack_id} with reason: {fail_reason}')
-                detection_failed_stack_ids.append(stack_id)
                 break
 
-            if attempts < MAX_ATTEMPTS:
+            if attempts < CHECK_STATUS_MAX_ATTEMPTS:
                 attempts += 1
-                sleep = ATTEMPT_WAIT_TIME
+                sleep = CHECK_STATUS_ATTEMPT_WAIT_TIME
                 time.sleep(sleep)
             else:
                 print('Max attempts exceeded')
                 sys.exit(1)
 
-    return detection_failed_stack_ids
+    return detection_complete_stack_ids
 
 
 def build_slack_message(stack):

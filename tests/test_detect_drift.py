@@ -1,7 +1,10 @@
 import unittest
+import sys
 
+sys.path.insert(0, './drift_detector')
+
+from drift_detector.drift_detector import detect_drift
 from unittest.mock import MagicMock
-from src.drift_detector import detect_drift
 
 
 class MockCFClient: pass
@@ -16,6 +19,7 @@ class TestDetectDrift(unittest.TestCase):
             'StackDriftDetectionId': 42
         })
         mock_cf_client.describe_stack_drift_detection_status = MagicMock(return_value={
+            'StackId': 'stack_id',
             'DetectionStatus': 'DETECTION_COMPLETE'
         })
         mock_cf_client.describe_stack_resource_drifts = MagicMock(return_value={

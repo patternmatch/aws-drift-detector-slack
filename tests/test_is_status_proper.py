@@ -1,6 +1,9 @@
 import unittest
+import sys
 
-from src.drift_detector import is_status_proper_to_check_drift
+sys.path.insert(0, './drift_detector')
+
+from drift_detector.drift_detector import is_status_proper_to_check_drift
 
 
 class TestIsStatusProperToCheckDrift(unittest.TestCase):
@@ -9,7 +12,6 @@ class TestIsStatusProperToCheckDrift(unittest.TestCase):
         Test that valid status is correctly detected
         """
         self.assertEqual(is_status_proper_to_check_drift('UPDATE_COMPLETE'), True)
-
 
     def test_invalid_status(self):
         """
