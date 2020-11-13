@@ -1,6 +1,9 @@
 import unittest
+import sys
 
-from src.drift_detector import get_stack_url
+sys.path.insert(0, './drift_detector')
+
+from drift_detector.drift_detector import get_stack_url
 
 
 class TestGetStackUrl(unittest.TestCase):
