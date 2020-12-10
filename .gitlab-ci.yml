@@ -1,14 +1,32 @@
 image: python:3.7
 
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
 stages:
   - secrets
   - test
   - deploy-dev
   - deploy-prod
 
+before_script:
+  - python -V
+  - pip install virtualenv
+  - virtualenv venv
+  - ./install.sh
+  - source venv/bin/activate
+  - export $(cat .ci-secrets | xargs)
+
 secrets:
   stage: secrets
   image: clevy/awssecrets
+  before_script:
+    - echo "Overriding common before_script to do nothing"
   script:
     - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_FOR_GITLAB_SECRETS_MANAGER
     - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_FOR_GITLAB_SECRETS_MANAGER
@@ -20,22 +38,6 @@ secrets:
     paths:
       # this will be available by default in all the next stages
       - .ci-secrets
-
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-
-cache:
-  paths:
-    - .cache/pip
-    - venv/
-
-before_script:
-  - python -V
-  - pip install virtualenv
-  - virtualenv venv
-  - ./install.sh
-  - source venv/bin/activate
-  - export $(cat .ci-secrets | xargs)
 
 test:
   stage: test
