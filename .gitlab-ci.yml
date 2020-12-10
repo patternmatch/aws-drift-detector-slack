@@ -1,3 +1,5 @@
+image: python:3.7
+
 stages:
   - secrets
   - test
@@ -18,8 +20,6 @@ secrets:
     paths:
       # this will be available by default in all the next stages
       - .ci-secrets
-
-image: python:3.7
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
