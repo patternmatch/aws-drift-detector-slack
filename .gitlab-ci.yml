@@ -1,15 +1,36 @@
+image: python:3.7
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
 stages:
   - secrets
-  - deploy
+  - test
+  - deploy-dev
+  - deploy-prod
+
+before_script:
+  - python -V
+  - pip install virtualenv
+  - virtualenv venv
+  - ./install.sh
+  - source venv/bin/activate
+  - export $(cat .ci-secrets | xargs)
 
 secrets:
   stage: secrets
   image: clevy/awssecrets
+  before_script:
+    - echo "Overriding default before_script to do nothing"
   script:
     - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_FOR_GITLAB_SECRETS_MANAGER
     - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_FOR_GITLAB_SECRETS_MANAGER
-    - export
-    - awssecrets --region us-east-1 --secret gitlab/fairbilet > .ci-secrets
+    - awssecrets --region us-east-1 --secret gitlab/driftdetector > .ci-secrets
   artifacts:
     # you want to set this to a value high enough to be used in all your stages,
     # but low enough that it gets invalidated quickly and needs to be regenerated later
@@ -18,12 +39,28 @@ secrets:
       # this will be available by default in all the next stages
       - .ci-secrets
 
-
-master-deploy:
-  stage: deploy
-  image: $CI_REGISTRY/pattern-match/dockerfiles/hugoawscli
-  before_script:
-    - export $(cat .ci-secrets | xargs)
+test:
+  stage: test
   script:
-    - echo "Very very strange"
+    - make test
+  except:
+    - develop
+    - master
+
+deploy-dev:
+  stage: deploy-dev
+  script:
+    - make test
+    - make deploy-dev
+  only:
+    - develop
+
+deploy-prod:
+  stage: deploy-prod
+  script:
+    - make test
+    - make deploy-prod
+    - make publish
+  only:
+    - master
 
