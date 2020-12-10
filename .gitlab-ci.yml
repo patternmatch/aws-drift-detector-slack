@@ -38,6 +38,9 @@ secrets:
     paths:
       # this will be available by default in all the next stages
       - .ci-secrets
+  only:
+    variables:
+      - $AWS_ACCESS_KEY_ID_FOR_GITLAB_SECRETS_MANAGER
 
 test:
   stage: test
