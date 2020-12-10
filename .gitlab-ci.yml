@@ -1,26 +1,10 @@
 image: python:3.7
 
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-
-cache:
-  paths:
-    - .cache/pip
-    - venv/
-
 stages:
   - secrets
   - test
   - deploy-dev
   - deploy-prod
-
-before_script:
-  - python -V
-  - pip install virtualenv
-  - virtualenv venv
-  - ./install.sh
-  - source venv/bin/activate
-  - export $(cat .ci-secrets | xargs)
 
 secrets:
   stage: secrets
