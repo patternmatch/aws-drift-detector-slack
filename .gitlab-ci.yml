@@ -1,4 +1,4 @@
-image: python:3.7
+image: $CI_REGISTRY/pattern-match/dockerfiles/python:3.7
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -19,9 +19,6 @@ before_script:
   - virtualenv venv
   - ./install.sh
   - source venv/bin/activate
-  - add-apt-repository universe
-  - apt-get update
-  - apt-get install jq
   - source ./set_secrets.sh
 
 test:
