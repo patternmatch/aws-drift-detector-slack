@@ -19,7 +19,7 @@ before_script:
   - virtualenv venv
   - ./install.sh
   - source venv/bin/activate
-  - export $(cat .ci-secrets | xargs)
+  - apt-get install -y jq
   - source ./set_secrets.sh
 
 test:
