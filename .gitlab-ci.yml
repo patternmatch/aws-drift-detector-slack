@@ -19,9 +19,9 @@ before_script:
   - virtualenv venv
   - ./install.sh
   - source venv/bin/activate
-  - sudo add-apt-repository universe
-  - sudo apt-get update
-  - sudo apt-get install jq
+  - add-apt-repository universe
+  - apt-get update
+  - apt-get install jq
   - source ./set_secrets.sh
 
 test:
