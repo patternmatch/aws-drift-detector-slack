@@ -1,5 +1,6 @@
 import unittest
 import sys
+import json
 
 sys.path.insert(0, './drift_detector')
 
@@ -43,7 +44,7 @@ class TestDetectDrift(unittest.TestCase):
             }
         ]
 
-        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+        stacks, _ = detect_drift(mock_cf_client, json.dumps(mock_stacks, default=str))
 
         self.assertEqual(stacks, [
             {
@@ -87,7 +88,7 @@ class TestDetectDrift(unittest.TestCase):
             ],
         })
 
-        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+        stacks, _ = detect_drift(mock_cf_client, json.dumps(mock_stacks, default=str))
 
         self.assertEqual(stacks, [
             {
@@ -141,7 +142,7 @@ class TestDetectDrift(unittest.TestCase):
             ],
         })
 
-        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+        stacks, _ = detect_drift(mock_cf_client, json.dumps(mock_stacks, default=str))
 
         self.assertEqual(stacks, [
             {
@@ -190,7 +191,7 @@ class TestDetectDrift(unittest.TestCase):
             ],
         })
 
-        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+        stacks, _ = detect_drift(mock_cf_client, json.dumps(mock_stacks, default=str))
 
         self.assertEqual(stacks, [
             {
@@ -234,7 +235,7 @@ class TestDetectDrift(unittest.TestCase):
             ],
         })
 
-        stacks, _ = detect_drift(mock_cf_client, mock_stacks)
+        stacks, _ = detect_drift(mock_cf_client, json.dumps(mock_stacks, default=str))
 
         self.assertEqual(stacks, [
             {

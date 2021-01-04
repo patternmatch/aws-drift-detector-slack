@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, './drift_detector')
 
-from drift_detector.drift_detector import get_emoji_for_status
+from drift_detector.slack_notification import get_emoji_for_status
 
 
 class TestEmoji(unittest.TestCase):
