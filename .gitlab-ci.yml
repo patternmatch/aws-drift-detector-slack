@@ -1,4 +1,4 @@
-image: python:3.7
+image: $CI_REGISTRY/pattern-match/dockerfiles/python:3.7
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -8,14 +8,21 @@ cache:
     - .cache/pip
     - venv/
 
+stages:
+  - test
+  - deploy-dev
+  - deploy-prod
+
 before_script:
   - python -V
   - pip install virtualenv
   - virtualenv venv
   - ./install.sh
   - source venv/bin/activate
+  - source ./set_secrets.sh
 
 test:
+  stage: test
   script:
     - make test
   except:
@@ -23,6 +30,7 @@ test:
     - master
 
 deploy-dev:
+  stage: deploy-dev
   script:
     - make test
     - make deploy-dev
@@ -30,9 +38,11 @@ deploy-dev:
     - develop
 
 deploy-prod:
+  stage: deploy-prod
   script:
     - make test
     - make deploy-prod
     - make publish
   only:
     - master
+

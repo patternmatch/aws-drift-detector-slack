@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, './drift_detector')
 
-from drift_detector.drift_detector import find_stacks
+from drift_detector.discover_stacks import find_stacks
 from unittest.mock import MagicMock
 
 

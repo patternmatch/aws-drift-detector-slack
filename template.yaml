@@ -20,6 +20,10 @@ Parameters:
     Default: '.*'
     Description: 'Regex to define which stacks should scanned. This is using python style regex ("re" module). Example: to only monitor stacks with "prod" in their name, use ".*prod.*"'
     Type: String
+  StackBatches:
+    Default: 10
+    Description: 'Number that indicates how many stacks should be send to sqs in one batch'
+    Type: Number
 Globals:
   Function:
     Timeout: 900
@@ -33,10 +37,43 @@ Metadata:
     ReadmeUrl: docs/README.md
     Labels: [ 'cloudformation', 'slack', 'drift' ]
     HomePageUrl: https://driftdetector.com
-    SemanticVersion: 2.0.5
+    SemanticVersion: 2.1.0
     SourceCodeUrl: https://github.com/patternmatch/aws-drift-detector-slack
 
 Resources:
+  DiscoverStacksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: drift_detector/
+      Handler: discover_stacks.lambda_handler
+      Runtime: python3.7
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName:
+              Fn::GetAtt:
+                - DriftDetectionQueue
+                - QueueName
+        - Statement:
+            - Sid: DiscoverCloudFormationPolicy
+              Effect: Allow
+              Action:
+                - cloudformation:DescribeStacks
+              Resource: '*'
+      Environment:
+        Variables:
+          STACK_REGEX:
+            Ref: StackRegex
+          DRIFT_DETECTION_QUEUE:
+            Ref: DriftDetectionQueue
+          STACK_BATCHES:
+            Ref: StackBatches
+      Events:
+        RunOnSchedule:
+          Type: Schedule
+          Properties:
+            Schedule:
+              Fn::Sub: cron(${Cron})
+
   DriftDetectorFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -45,17 +82,45 @@ Resources:
       Runtime: python3.7
       Policies:
         - ReadOnlyAccess
+        - SQSPollerPolicy:
+            QueueName:
+              Fn::GetAtt:
+                - DriftDetectionQueue
+                - QueueName
+        - LambdaInvokePolicy:
+            FunctionName:
+              Ref: SlackNotificationFuntion
+      Environment:
+        Variables:
+          SLACK_NOTIFICATION_FUNCTION:
+            Ref: SlackNotificationFuntion
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+                - DriftDetectionQueue
+                - Arn
+            BatchSize: 1
+            Enabled: true
+
+  SlackNotificationFuntion:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: drift_detector/
+      Handler: slack_notification.lambda_handler
+      Runtime: python3.7
       Environment:
         Variables:
           SLACK_WEBHOOK:
             Ref: SlackWebhook
           SHOW_IN_SYNC:
             Ref: ShowInSyncResources
-          STACK_REGEX:
-            Ref: StackRegex
-      Events:
-        RunOnSchedule:
-          Type: Schedule
-          Properties:
-            Schedule:
-              Fn::Sub: cron(${Cron})
+
+  DriftDetectionQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+      VisibilityTimeout: 900
+      ContentBasedDeduplication: true
